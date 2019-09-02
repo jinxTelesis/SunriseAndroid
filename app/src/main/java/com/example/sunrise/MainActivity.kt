@@ -10,5 +10,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         val controller = Controller()
         controller.start()
+        val rssController:RSSController = RSSController()
+        rssController.start()
+
+
     }
 }

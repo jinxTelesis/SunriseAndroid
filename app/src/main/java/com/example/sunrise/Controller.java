@@ -1,7 +1,5 @@
 package com.example.sunrise;
 
-import android.annotation.TargetApi;
-import android.os.Build;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import retrofit2.Call;

@@ -1,23 +1,53 @@
 package com.example.sunrise;
 
+import android.annotation.TargetApi;
+import android.os.Build;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.util.List;
 
 public class Controller implements Callback<List<Change>> {
-    
+
     static final String BASE_URL = "https://git.eclipse.org/r/";
 
+    public void start(){
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
 
+        // uhh wtf
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build();
+
+        GerritAPI gerritAPI= retrofit.create(GerritAPI.class);
+
+        Call<List<Change>> call = gerritAPI.loadChanges("status:open");
+        call.enqueue(this);
+
+    }
+
+    //todo check is this resolved with kotlin?
+    @TargetApi(Build.VERSION_CODES.N)
     @Override
     public void onResponse(Call<List<Change>> call, Response<List<Change>> response) {
-        //todo implement me
+        if(response.isSuccessful()){
+            List<Change> changeList = response.body();
+            changeList.forEach(change -> System.out.println(change.subject));
+        } else{
+            System.out.println(response.errorBody());
+        }
     }
 
     @Override
     public void onFailure(Call<List<Change>> call, Throwable t) {
-        //todo implement me
+       t.printStackTrace();
     }
 }

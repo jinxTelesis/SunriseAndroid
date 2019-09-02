@@ -35,7 +35,6 @@ public class Controller implements Callback<List<Change>> {
     }
 
     //todo check is this resolved with kotlin?
-    @TargetApi(Build.VERSION_CODES.N)
     @Override
     public void onResponse(Call<List<Change>> call, Response<List<Change>> response) {
         if(response.isSuccessful()){

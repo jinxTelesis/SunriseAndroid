@@ -5,12 +5,9 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.RecyclerView
 import android.view.View
-import android.widget.Button
-import android.widget.Spinner
 import android.content.Intent
 import android.support.v7.widget.LinearLayoutManager
-import android.widget.AdapterView
-import android.widget.Toast
+import android.widget.*
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -38,11 +35,24 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
             }
         }
+
+        val question:List<Question> = FakeDataProvider.getQuestions();
+        var arrayAdapter:ArrayAdapter<Question> = ArrayAdapter<Question>(this,
+            android.R.layout.simple_spinner_dropdown_item, question)
+
+
+
         authenticateButton = findViewById<View>(R.id.authenticate_button) as Button
 
         recyclerView = findViewById<View>(R.id.list) as RecyclerView
         recyclerView!!.setHasFixedSize(true)
         recyclerView!!.layoutManager = LinearLayoutManager(this@MainActivity)
+
+        val answer:List<Answer> = FakeDataProvider.getAnswers()
+        var adapter:RecyclerViewAdapter = RecyclerViewAdapter(answer)
+
+        recyclerView!!.setAdapter(adapter) //todo check
+
 
 
     }
@@ -51,7 +61,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onResume() {
         super.onResume()
         if (token != null) {
-            authenticateButton!!.setEnabled(false)
+            authenticateButton!!.isEnabled = false
         }
     }
 

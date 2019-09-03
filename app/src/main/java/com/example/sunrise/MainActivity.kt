@@ -8,10 +8,22 @@ import android.view.View
 import android.content.Intent
 import android.support.v7.widget.LinearLayoutManager
 import android.widget.*
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.Retrofit
+import com.google.gson.GsonBuilder
+import okhttp3.ResponseBody
+import android.widget.Toast
+import android.util.Log
+import android.widget.ArrayAdapter
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
+
+    private var stackoverflowAPI :StackOverflowAPI? = null
     private var token: String? = null
     private var authenticateButton: Button? = null
     private var questionsSpinner: Spinner? = null
@@ -49,7 +61,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         recyclerView!!.layoutManager = LinearLayoutManager(this@MainActivity)
 
         val answer:List<Answer> = FakeDataProvider.getAnswers()
-        var adapter:RecyclerViewAdapter = RecyclerViewAdapter(answer)
+        val adapter:RecyclerViewAdapter = RecyclerViewAdapter(answer)
 
         recyclerView!!.setAdapter(adapter) //todo check
 
@@ -65,11 +77,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-
-    override fun onClick(v: View) {
-        when (v.id) {
+    override fun onClick(v: View?) {
+        when (v!!.getId()) {
             android.R.id.text1 -> if (token != null) {
-                // TODO
+                //TODO
             } else {
                 Toast.makeText(this, "You need to authenticate first", Toast.LENGTH_LONG).show()
             }
@@ -78,9 +89,74 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }// TODO
     }
 
+    private fun createStackoverflowAPI() {
+        val gson = GsonBuilder()
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+            .create()
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(StackOverflowAPI.BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+
+        stackoverflowAPI = retrofit.create(StackOverflowAPI::class.java)
+    }
+
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (resultCode == Activity.RESULT_OK && requestCode == 1) {
             token = data!!.getStringExtra("token")
+        }
+    }
+
+    var questionsCallback: Callback<ListWrapper<Question>> = object : Callback<ListWrapper<Question>> {
+        override fun onResponse(call: Call<ListWrapper<Question>>, response: Response<ListWrapper<Question>>) {
+            if (response.isSuccessful()) {
+                val questions = response.body()
+                val arrayAdapter = ArrayAdapter<Question>(
+                    this@MainActivity,
+                    android.R.layout.simple_spinner_dropdown_item,
+                    questions.items
+                )
+                questionsSpinner!!.setAdapter(arrayAdapter)
+            } else {
+                Log.d("QuestionsCallback", "Code: " + response.code() + " Message: " + response.message())
+            }
+        }
+
+        override fun onFailure(call: Call<ListWrapper<Question>>, t: Throwable) {
+            t.printStackTrace()
+        }
+    }
+
+    var answersCallback: Callback<ListWrapper<Answer>> = object : Callback<ListWrapper<Answer>> {
+        override fun onResponse(call: Call<ListWrapper<Answer>>, response: Response<ListWrapper<Answer>>) {
+            if (response.isSuccessful()) {
+                val data:MutableList<Answer>? = null //this ListWrapper or just answer
+                data!!.addAll(response.body().items)
+                recyclerView!!.setAdapter(RecyclerViewAdapter(data))
+            } else {
+                Log.d("QuestionsCallback", "Code: " + response.code() + " Message: " + response.message())
+            }
+        }
+
+        override fun onFailure(call: Call<ListWrapper<Answer>>, t: Throwable) {
+            t.printStackTrace()
+        }
+    }
+
+    var upvoteCallback: Callback<ResponseBody> = object : Callback<ResponseBody> {
+        override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+            if (response.isSuccessful()) {
+                Toast.makeText(this@MainActivity, "Upvote successful", Toast.LENGTH_LONG).show()
+            } else {
+                Log.d("QuestionsCallback", "Code: " + response.code() + " Message: " + response.message())
+                Toast.makeText(this@MainActivity, "You already upvoted this answer", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+            t.printStackTrace()
         }
     }
 
